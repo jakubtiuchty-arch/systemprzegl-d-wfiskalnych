@@ -107,16 +107,6 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
         console.log("Offline - skipping cloud save");
       }
 
-      // 4. Download Calendar Event (.ics)
-      const icsContent = generateCalendarEvent(currentData.clientName);
-      const icsBlob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(icsBlob);
-      link.setAttribute('download', 'przypomnienie.ics');
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
       setIsSubmitted(true);
     } catch (error) {
       console.error("Error during finalization:", error);
