@@ -33,6 +33,13 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Hide keyboard when entering scan screen
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.blur();
+    }
+  }, []);
+
   const handleAddDevice = (serial: string) => {
     if (!serial.trim()) return;
 
@@ -156,6 +163,16 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
             <Camera size={24} />
           </button>
         </div>
+
+        {/* Scanning Hint */}
+        <div className="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+          <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={18} />
+          <div className="text-xs text-amber-800">
+            <strong>Wskazówka:</strong> Celuj w kod kreskowy oznaczony <strong>N/U</strong> (Numer Unikatowy).
+            Jeśli skaner łapie niewłaściwy kod, spróbuj zakryć pozostałe palcem lub użyć aparatu.
+          </div>
+        </div>
+
         {inputSerial.length > 3 && (
           <p className="text-xs text-amber-600 mt-1 text-center">
             Jeśli skaner nie dodaje automatycznie, kliknij "+" lub skonfiguruj "Send Enter" w DataWedge.

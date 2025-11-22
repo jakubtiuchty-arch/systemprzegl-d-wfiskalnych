@@ -86,7 +86,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Klienta
+              Email klienta
             </label>
             <input
               type="email"
