@@ -1,12 +1,12 @@
 export const getEmailSubject = (clientName: string) => {
-  return `Protokół Przeglądu - ${clientName}`;
+  return `Protokół z przeglądu urządzeń fiskalnych`;
 };
 
 export const getEmailHtml = (clientName: string, date: string) => {
   return `
     <div style="font-family: sans-serif; color: #333;">
       <p>Dzień dobry,</p>
-      <p>W załączniku przesyłam protokół przeglądu technicznego kas fiskalnych wykonanego w dniu <strong>${date}</strong>.</p>
+      <p>W załączniku przesyłam protokół przeglądu technicznego drukarek fiskalnych wykonanego w dniu <strong>${date}</strong>.</p>
       <br>
       <p>Pozdrawiamy,</p>
       <p><strong>Zespół TAKMA</strong></p>

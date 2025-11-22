@@ -3,13 +3,14 @@ import { ArrowRight, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 interface StartScreenProps {
-  onStart: (clientName: string, clientNip: string, clientEmail: string) => void;
+  onStart: (clientName: string, clientNip: string, clientEmail: string, deviceModel: string) => void;
 }
 
 const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
   const [clientName, setClientName] = useState('');
   const [clientNip, setClientNip] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [deviceModel, setDeviceModel] = useState('Posnet Temo');
   const [error, setError] = useState('');
 
   const handleStart = () => {
@@ -22,7 +23,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
       return;
     }
     // Email is optional, but passed if present
-    onStart(clientName, clientNip, clientEmail);
+    onStart(clientName, clientNip, clientEmail, deviceModel);
   };
 
   const handleLogout = async () => {
@@ -97,6 +98,21 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
               placeholder="np. sekretariat@nadlesnictwo.pl"
               className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Urządzenie
+            </label>
+            <select
+              value={deviceModel}
+              onChange={(e) => setDeviceModel(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white"
+            >
+              <option value="Posnet Temo">Posnet Temo</option>
+              <option value="Posnet Pospay">Posnet Pospay</option>
+              <option value="Novitus Bono Online">Novitus Bono Online</option>
+            </select>
           </div>
 
           {error && (

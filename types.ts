@@ -15,6 +15,7 @@ export interface InspectionData {
   servicemanSignature: string | null; // Base64 data URL
   clientSignature: string | null; // Base64 data URL
   location?: string;
+  deviceModel?: string;
 }
 
 export enum AppScreen {

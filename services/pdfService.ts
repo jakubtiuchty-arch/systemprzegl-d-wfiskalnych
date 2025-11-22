@@ -84,8 +84,7 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   if (fontLoaded) doc.setFont("Roboto", "normal");
   else doc.setFont("helvetica", "normal");
 
-  const locationPart = data.location ? `Miejsce: ${data.location}, ` : '';
-  const headerText = `${locationPart}Data: ${dateStr}`;
+  const headerText = `Trzebnica, ${dateStr}`;
 
   doc.text(txt(headerText), pageWidth - 15, 15, { align: "right" });
 
@@ -122,6 +121,7 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
 
     return [
       index + 1,
+      txt(data.deviceModel || "-"),
       device.serialNumber,
       txt(status),
       txt(description)
@@ -130,7 +130,7 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
 
   autoTable(doc, {
     startY: 50,
-    head: [[txt('Lp.'), txt('Nr Unikatowy'), txt('Status'), txt('Uwagi')]],
+    head: [[txt('Lp.'), txt('Urządzenie'), txt('Nr Unikatowy'), txt('Status'), txt('Uwagi')]],
     body: tableBody,
     styles: {
       font: fontLoaded ? 'Roboto' : 'helvetica',
@@ -154,11 +154,13 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   if (fontLoaded) doc.setFont("Roboto", "normal");
   else doc.setFont("helvetica", "normal");
 
-  doc.text(txt("Podpis Serwisanta:"), 30, finalY);
+  doc.text(txt("Jakub Tiuchty"), 30, finalY);
+  doc.text(txt("Nr uprawnień: 17740"), 30, finalY + 5);
+
   if (data.servicemanSignature) {
-    doc.addImage(data.servicemanSignature, 'PNG', 30, finalY + 5, 50, 25);
+    doc.addImage(data.servicemanSignature, 'PNG', 30, finalY + 10, 50, 25);
   }
-  doc.line(30, finalY + 35, 90, finalY + 35); // Underline
+  doc.line(30, finalY + 40, 90, finalY + 40); // Underline
 
   // Client Signature
   const clientSigX = pageWidth - 90; // 30 margin from right approx

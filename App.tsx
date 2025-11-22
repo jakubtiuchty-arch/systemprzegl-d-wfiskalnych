@@ -18,6 +18,7 @@ const App: React.FC = () => {
     clientName: '',
     clientNip: '',
     clientEmail: '',
+    deviceModel: '',
     devices: [],
     servicemanSignature: null,
     clientSignature: null,
@@ -62,9 +63,9 @@ const App: React.FC = () => {
     return <LoginScreen />;
   }
 
-  // Step 1: Start Screen -> Capture Client Name, NIP and Email
-  const handleStart = (clientName: string, clientNip: string, clientEmail: string) => {
-    setData(prev => ({ ...prev, clientName, clientNip, clientEmail }));
+  // Step 1: Start Screen -> Capture Client Name, NIP, Email and Device Model
+  const handleStart = (clientName: string, clientNip: string, clientEmail: string, deviceModel: string) => {
+    setData(prev => ({ ...prev, clientName, clientNip, clientEmail, deviceModel }));
     setCurrentScreen(AppScreen.SCAN);
   };
 
