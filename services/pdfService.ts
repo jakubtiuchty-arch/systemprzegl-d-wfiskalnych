@@ -112,7 +112,13 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
       status += " (Serwis)";
     }
 
-    const description = device.isWorking ? "-" : (device.issueDescription || "Brak opisu");
+    let description = "-";
+    if (!device.isWorking) {
+      description = device.issueDescription || "Brak opisu";
+      if (device.takenToService) {
+        description += " | Zabrano do serwisu";
+      }
+    }
 
     return [
       index + 1,
