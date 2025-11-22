@@ -33,10 +33,19 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Hide keyboard when entering scan screen
+  // Hide keyboard when entering scan screen (Android-friendly approach)
   useEffect(() => {
     if (inputRef.current) {
+      // Set readonly to prevent keyboard from showing
+      inputRef.current.setAttribute('readonly', 'readonly');
       inputRef.current.blur();
+
+      // Remove readonly after a delay so manual input still works
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.removeAttribute('readonly');
+        }
+      }, 500);
     }
   }, []);
 
