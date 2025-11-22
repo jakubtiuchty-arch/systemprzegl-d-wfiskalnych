@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'Fiscal Inspector <onboarding@resend.dev>', // Change this to your verified domain in production
+            from: 'System przeglądów fiskalnych <onboarding@resend.dev>',
             to,
             subject,
             html,
