@@ -25,7 +25,7 @@ export default async function handler(req, res) {
 
     try {
         const { data, error } = await resend.emails.send({
-            from: 'System przeglądów fiskalnych <przeglądy@rejestratory.info>',
+            from: 'System przeglądów fiskalnych <kontakt@rejestratory.info>',
             to,
             subject,
             html,
