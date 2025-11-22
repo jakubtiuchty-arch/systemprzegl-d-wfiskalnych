@@ -1,0 +1,4 @@
+{
+  "name": "FiscalInspector Web",
+  "description": "A web-based fiscal inspection tool for Zebra devices, mimicking native Android functionality for creating inspection reports and PDF protocols."
+}
