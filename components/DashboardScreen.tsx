@@ -1,7 +1,8 @@
+```javascript
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
-import { getInspectionsStats, MonthlyStats } from '../services/db';
-import { LogOut, TrendingUp, Calendar, FileText, Printer, Loader2 } from 'lucide-react';
+import { getInspectionsStats, MonthlyStats, deleteInspection } from '../services/db';
+import { LogOut, TrendingUp, Calendar, FileText, Printer, Loader2, Trash2 } from 'lucide-react';
 import { generateMonthlySettlement } from '../services/pdfService';
 
 const DashboardScreen: React.FC = () => {
@@ -33,6 +34,18 @@ const DashboardScreen: React.FC = () => {
 
     const handleSignOut = async () => {
         await supabase.auth.signOut();
+    };
+
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Czy na pewno chcesz usunąć ten przegląd? Operacja jest nieodwracalna.')) return;
+
+        try {
+            await deleteInspection(id);
+            await loadData(); // Reload data
+        } catch (error) {
+            console.error("Error deleting inspection:", error);
+            alert("Błąd usuwania przeglądu.");
+        }
     };
 
     const handlePrintReport = async (monthStats: MonthlyStats) => {
@@ -179,9 +192,52 @@ const DashboardScreen: React.FC = () => {
                         </table>
                     </div>
                 </div>
+
+                {/* Detailed Inspections List */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                        <h2 className="font-bold text-gray-800 flex items-center gap-2">
+                            <FileText size={20} className="text-gray-500" />
+                            Lista Szczegółowa (Edycja)
+                        </h2>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
+                                <tr>
+                                    <th className="px-6 py-3">Data</th>
+                                    <th className="px-6 py-3">Klient</th>
+                                    <th className="px-6 py-3">NIP</th>
+                                    <th className="px-6 py-3 text-right">Akcje</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200">
+                                {stats?.raw.map((inspection) => (
+                                    <tr key={inspection.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 text-gray-900">
+                                            {new Date(inspection.inspection_date).toLocaleDateString()}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-600">{inspection.client_name}</td>
+                                        <td className="px-6 py-4 text-gray-500">{inspection.client_nip}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button 
+                                                onClick={() => handleDelete(inspection.id)}
+                                                className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
+                                                title="Usuń ten przegląd"
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     );
 };
 
 export default DashboardScreen;
+```

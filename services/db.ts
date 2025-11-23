@@ -160,3 +160,12 @@ export const getInspectionsStats = async (userId: string, year: number) => {
     raw: data
   };
 };
+
+export const deleteInspection = async (id: number) => {
+  const { error } = await supabase
+    .from('inspections')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+};
