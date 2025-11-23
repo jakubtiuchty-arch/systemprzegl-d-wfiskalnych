@@ -180,11 +180,10 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   return { fileName, blob };
 };
 
-export const generateMonthlySettlement = async (stats: any, servicemanName: string) => {
+const preparePdf = async () => {
   const doc = new jsPDF();
   let fontLoaded = false;
 
-  // Load Fonts (Async)
   try {
     const [fontRegular] = await Promise.all([
       fetchFont(FONT_URL_REGULAR)
@@ -199,6 +198,10 @@ export const generateMonthlySettlement = async (stats: any, servicemanName: stri
     doc.setFont("helvetica");
   }
 
+  return { doc, fontLoaded };
+};
+
+const renderMonthlySettlementPage = (doc: jsPDF, stats: any, servicemanName: string, fontLoaded: boolean) => {
   // Header
   doc.setFontSize(18);
   doc.text(`Rozliczenie Serwisowe: ${stats.month}`, 14, 20);
@@ -248,7 +251,32 @@ export const generateMonthlySettlement = async (stats: any, servicemanName: stri
     },
   });
 
-  // Auto Print
+  // Footer
+  const finalY = (doc as any).lastAutoTable.finalY + 20;
+  doc.setFontSize(10);
+  doc.text("......................................................", 14, finalY);
+  doc.text("Podpis Serwisanta", 14, finalY + 5);
+
+  doc.text("......................................................", 120, finalY);
+  doc.text("Zatwierdzenie (Biuro)", 120, finalY + 5);
+};
+
+export const generateMonthlySettlement = async (stats: any, servicemanName: string) => {
+  const { doc, fontLoaded } = await preparePdf();
+  renderMonthlySettlementPage(doc, stats, servicemanName, fontLoaded);
+
+  doc.autoPrint();
+  window.open(doc.output('bloburl'), '_blank');
+};
+
+export const generateBulkMonthlySettlement = async (statsList: any[], servicemanName: string) => {
+  const { doc, fontLoaded } = await preparePdf();
+
+  statsList.forEach((stats, index) => {
+    if (index > 0) doc.addPage();
+    renderMonthlySettlementPage(doc, stats, servicemanName, fontLoaded);
+  });
+
   doc.autoPrint();
   window.open(doc.output('bloburl'), '_blank');
 };
