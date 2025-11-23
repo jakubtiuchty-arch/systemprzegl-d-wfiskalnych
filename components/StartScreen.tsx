@@ -26,32 +26,6 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     onStart(clientName, clientNip, clientEmail, deviceModel);
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-  };
-
-  const handleTestReminder = async () => {
-    try {
-      const today = new Date();
-      const targetDate = new Date(today);
-      targetDate.setDate(today.getDate() + 14);
-      const targetDateStr = targetDate.toISOString().split('T')[0];
-
-      const { error } = await supabase.from('inspections').insert({
-        client_name: 'TEST PRZYPOMNIENIA',
-        client_email: 'test@example.com',
-        inspection_date: new Date().toISOString().split('T')[0],
-        next_inspection_date: targetDateStr,
-        reminder_sent: false
-      });
-
-      if (error) throw error;
-      alert(`Dodano rekord testowy na dzień: ${targetDateStr}. Teraz wejdź na: /api/cron/send-reminders`);
-    } catch (e: any) {
-      alert('Błąd dodawania testu: ' + e.message);
-    }
-  };
-
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
       <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
@@ -133,13 +107,6 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
               }`}
           >
             Rozpocznij Przegląd
-          </button>
-
-          <button
-            onClick={handleTestReminder}
-            className="w-full py-2 mt-4 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-300 rounded"
-          >
-            [DEBUG] Dodaj test przypomnienia (za 14 dni)
           </button>
         </div>
 
