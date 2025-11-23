@@ -213,8 +213,8 @@ export const generateMonthlySettlement = async (stats: any, servicemanName: stri
     head: [['Podsumowanie', 'Wartość']],
     body: [
       ['Ilość przeglądów', `${stats.count} szt.`],
-      ['Stawka za przegląd (Na rękę)', '50.00 PLN'],
-      ['Do wypłaty (Na rękę)', `${stats.earnings.toFixed(2)} PLN`],
+      ['Stawka za przegląd', '50.00 PLN'],
+      ['Do wypłaty', `${stats.earnings.toFixed(2)} PLN`],
       ['Przychód Firmy (Netto)', `${stats.revenue.toFixed(2)} PLN`],
     ],
     theme: 'striped',
@@ -248,17 +248,9 @@ export const generateMonthlySettlement = async (stats: any, servicemanName: stri
     },
   });
 
-  // Footer
-  const finalY = (doc as any).lastAutoTable.finalY + 20;
-  doc.setFontSize(10);
-  doc.text("......................................................", 14, finalY);
-  doc.text("Podpis Serwisanta", 14, finalY + 5);
-
-  doc.text("......................................................", 120, finalY);
-  doc.text("Zatwierdzenie (Biuro)", 120, finalY + 5);
-
-  // Save
-  doc.save(`Rozliczenie_${servicemanName.replace(/\s+/g, '_')}_${stats.month}.pdf`);
+  // Auto Print
+  doc.autoPrint();
+  window.open(doc.output('bloburl'), '_blank');
 };
 
 export const generateCalendarEvent = (clientName: string): string => {

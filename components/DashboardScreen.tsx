@@ -126,7 +126,7 @@ const DashboardScreen: React.FC = () => {
                             <div className="p-3 bg-green-50 text-green-600 rounded-lg">
                                 <TrendingUp size={24} />
                             </div>
-                            <span className="text-sm font-medium text-gray-500">Twój Zarobek (Na rękę)</span>
+                            <span className="text-sm font-medium text-gray-500">Twój Zarobek</span>
                         </div>
                         <p className="text-3xl font-bold text-gray-900">{stats?.total.earnings} PLN</p>
                         <p className="text-xs text-gray-400 mt-1">Stawka: 50 PLN / szt.</p>
