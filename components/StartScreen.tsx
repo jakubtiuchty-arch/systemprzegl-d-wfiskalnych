@@ -26,8 +26,32 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
     onStart(clientName, clientNip, clientEmail, deviceModel);
   };
 
-  const handleLogout = async () => {
+  const handleSignOut = async () => {
     await supabase.auth.signOut();
+  };
+
+  const handleTestReminder = async () => {
+    try {
+      const today = new Date();
+      const targetDate = new Date(today);
+      targetDate.setDate(today.getDate() + 14);
+      const targetDateStr = targetDate.toISOString().split('T')[0];
+
+      const { error } = await supabase.from('inspections').insert({
+        client_name: 'TEST PRZYPOMNIENIA',
+        client_email: 'test@example.com',
+        client_nip: '0000000000',
+        inspection_date: new Date().toISOString().split('T')[0],
+        next_inspection_date: targetDateStr,
+        reminder_sent: false,
+        user_id: (await supabase.auth.getUser()).data.user?.id
+      });
+
+      if (error) throw error;
+      alert(`Dodano rekord testowy na dzień: ${targetDateStr}. Teraz wejdź na: /api/cron/send-reminders`);
+    } catch (e: any) {
+      alert('Błąd dodawania testu: ' + e.message);
+    }
   };
 
   return (
@@ -106,8 +130,8 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
             onClick={handleStart}
             disabled={!clientName || !clientNip || !clientEmail}
             className={`w-full py-3 rounded-lg font-bold text-white transition-all transform active:scale-95 ${clientName && clientNip && clientEmail
-                ? 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
-                : 'bg-gray-300 cursor-not-allowed'
+              ? 'bg-blue-600 hover:bg-blue-700 shadow-md hover:shadow-lg'
+              : 'bg-gray-300 cursor-not-allowed'
               }`}
           >
             Rozpocznij Przegląd
