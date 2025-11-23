@@ -240,4 +240,4 @@ const DashboardScreen: React.FC = () => {
 };
 
 export default DashboardScreen;
-```
+
