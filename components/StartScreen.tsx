@@ -42,8 +42,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
         client_email: 'test@example.com',
         inspection_date: new Date().toISOString().split('T')[0],
         next_inspection_date: targetDateStr,
-        reminder_sent: false,
-        user_id: (await supabase.auth.getUser()).data.user?.id
+        reminder_sent: false
       });
 
       if (error) throw error;
