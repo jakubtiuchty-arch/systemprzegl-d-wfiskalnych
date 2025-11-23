@@ -28,6 +28,12 @@ export const getEmailHtml = (clientName: string, date: string) => {
         <p style="font-size: 16px; line-height: 1.5; margin-top: 30px;">
           W razie pytań pozostajemy do dyspozycji.
         </p>
+
+        <div style="margin-top: 30px; padding: 20px; background-color: #eff6ff; border-radius: 6px; text-align: center;">
+          <p style="margin: 0 0 10px 0; font-weight: bold; color: #1e3a8a;">Zapraszamy na nasz odświeżony portal!</p>
+          <p style="margin: 0 0 15px 0; font-size: 14px; color: #334155;">Sprawdź najnowsze urządzenia i usługi.</p>
+          <a href="https://rejestratory.info" style="display: inline-block; background-color: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 14px;">Odwiedź rejestratory.info</a>
+        </div>
         
         <div style="margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
           <p style="margin: 0; font-weight: bold; color: #1e293b;">Zespół TAKMA</p>
