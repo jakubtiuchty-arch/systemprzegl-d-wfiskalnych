@@ -113,9 +113,42 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
     }
   };
 
-  // ... status click handlers ...
+  const handleStatusClick = (id: string) => {
+    const device = devices.find(d => d.id === id);
+    if (!device) return;
 
-  // ... save/cancel/remove handlers ...
+    if (device.isWorking) {
+      setEditingId(id);
+      setEditDescription(device.issueDescription || '');
+      setEditTakenToService(device.takenToService || false);
+
+      const updated = devices.map(d => d.id === id ? { ...d, isWorking: false } : d);
+      onUpdateDevices(updated);
+    } else {
+      const updated = devices.map(d =>
+        d.id === id ? { ...d, isWorking: true, issueDescription: undefined, takenToService: undefined } : d
+      );
+      onUpdateDevices(updated);
+      setEditingId(null);
+    }
+  };
+
+  const saveFaultDetails = () => {
+    if (!editingId) return;
+    const updated = devices.map(d =>
+      d.id === editingId ? { ...d, issueDescription: editDescription, takenToService: editTakenToService } : d
+    );
+    onUpdateDevices(updated);
+    setEditingId(null);
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+  };
+
+  const removeDevice = (id: string) => {
+    onUpdateDevices(devices.filter(d => d.id !== id));
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-100 relative">
