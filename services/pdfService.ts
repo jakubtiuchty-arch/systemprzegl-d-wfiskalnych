@@ -180,13 +180,24 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   return { fileName, blob };
 };
 
-export const generateMonthlySettlement = (stats: any, servicemanName: string) => {
+export const generateMonthlySettlement = async (stats: any, servicemanName: string) => {
   const doc = new jsPDF();
+  let fontLoaded = false;
 
-  // Add font
-  doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
-  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
-  doc.setFont("Roboto");
+  // Load Fonts (Async)
+  try {
+    const [fontRegular] = await Promise.all([
+      fetchFont(FONT_URL_REGULAR)
+    ]);
+
+    doc.addFileToVFS('Roboto-Regular.ttf', fontRegular);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto');
+    fontLoaded = true;
+  } catch (e) {
+    console.error("Could not load fonts for report.", e);
+    doc.setFont("helvetica");
+  }
 
   // Header
   doc.setFontSize(18);
@@ -208,7 +219,10 @@ export const generateMonthlySettlement = (stats: any, servicemanName: string) =>
     ],
     theme: 'striped',
     headStyles: { fillColor: [41, 128, 185] },
-    styles: { font: "Roboto", fontSize: 10 },
+    styles: {
+      font: fontLoaded ? "Roboto" : "helvetica",
+      fontSize: 10
+    },
   });
 
   // Detailed List
@@ -228,7 +242,10 @@ export const generateMonthlySettlement = (stats: any, servicemanName: string) =>
     body: tableData,
     theme: 'grid',
     headStyles: { fillColor: [46, 204, 113] },
-    styles: { font: "Roboto", fontSize: 9 },
+    styles: {
+      font: fontLoaded ? "Roboto" : "helvetica",
+      fontSize: 9
+    },
   });
 
   // Footer
