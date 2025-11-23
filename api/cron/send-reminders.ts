@@ -18,12 +18,19 @@ export async function GET(request: Request) {
 
     try {
         // 1. Calculate target date: Today + 14 days
-        const today = new Date();
-        const targetDate = new Date(today);
-        targetDate.setDate(today.getDate() + 14);
+        const url = new URL(request.url);
+        const overrideDate = url.searchParams.get('date');
 
-        // Format as YYYY-MM-DD for database comparison
-        const targetDateStr = targetDate.toISOString().split('T')[0];
+        let targetDateStr;
+        if (overrideDate) {
+            targetDateStr = overrideDate;
+            console.log(`Using override date: ${targetDateStr}`);
+        } else {
+            const today = new Date();
+            const targetDate = new Date(today);
+            targetDate.setDate(today.getDate() + 14);
+            targetDateStr = targetDate.toISOString().split('T')[0];
+        }
 
         console.log(`Checking for inspections expiring on: ${targetDateStr}`);
 
@@ -37,7 +44,10 @@ export async function GET(request: Request) {
         if (error) throw error;
 
         if (!inspections || inspections.length === 0) {
-            return new Response(JSON.stringify({ message: 'No reminders to send today.' }), {
+            return new Response(JSON.stringify({
+                message: `No reminders to send for date: ${targetDateStr}`,
+                targetDate: targetDateStr
+            }), {
                 status: 200,
                 headers: { 'Content-Type': 'application/json' },
             });
