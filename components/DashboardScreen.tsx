@@ -24,9 +24,9 @@ const DashboardScreen: React.FC = () => {
             setUserEmail(user.email || '');
             const data = await getInspectionsStats(user.id, year);
             setStats(data);
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error loading dashboard data:", error);
-            alert("Błąd ładowania danych.");
+            alert("Błąd ładowania danych: " + (error.message || error));
         } finally {
             setLoading(false);
         }
