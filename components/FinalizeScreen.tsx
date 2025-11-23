@@ -96,7 +96,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
             inspection_date: new Date().toISOString(),
             next_inspection_date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString(),
             location: currentData.location,
-            reminder_sent: false
+            reminder_sent: false,
+            device_count: currentData.devices.length // Save number of devices
           });
           if (error) throw error;
           console.log("Saved to Supabase");

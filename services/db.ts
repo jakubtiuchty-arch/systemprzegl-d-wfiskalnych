@@ -140,14 +140,16 @@ export const getInspectionsStats = async (userId: string, year: number) => {
       };
     }
 
-    statsByMonth[monthKey].count++;
-    statsByMonth[monthKey].earnings += 50;
-    statsByMonth[monthKey].revenue += 200;
+    const deviceCount = inspection.device_count || 1; // Default to 1 if missing
+
+    statsByMonth[monthKey].count += deviceCount;
+    statsByMonth[monthKey].earnings += (deviceCount * 50);
+    statsByMonth[monthKey].revenue += (deviceCount * 200);
     statsByMonth[monthKey].inspections.push(inspection);
 
-    totalCount++;
-    totalEarnings += 50;
-    totalRevenue += 200;
+    totalCount += deviceCount;
+    totalEarnings += (deviceCount * 50);
+    totalRevenue += (deviceCount * 200);
   });
 
   return {
