@@ -21,6 +21,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfFile, setPdfFile] = useState<{ blob: Blob, fileName: string } | null>(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [showEmailSuccessModal, setShowEmailSuccessModal] = useState(false);
 
   React.useEffect(() => {
@@ -36,9 +37,85 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
     };
   }, []);
 
-  // ... (keep existing useEffect for geolocation)
+  React.useEffect(() => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          // Only fetch address if online
+          if (navigator.onLine) {
+            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await response.json();
+            const city = data.address.city || data.address.town || data.address.village || "Nieznana lokalizacja";
+            setLocation(city);
+          } else {
+            setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          }
+        } catch (error) {
+          console.error("Error fetching location:", error);
+        }
+      }, (error) => {
+        console.error("Geolocation error:", error);
+      });
+    }
+  }, []);
 
-  // ... (keep handleSignature and handleFinish)
+  const handleSignature = (signature: string | null) => {
+    onUpdateData({
+      ...data,
+      servicemanSignature: signature
+    });
+  };
+
+  const handleFinish = async () => {
+    if (!data.servicemanSignature) {
+      alert("Podpis serwisanta jest wymagany!");
+      return;
+    }
+
+    setIsGenerating(true);
+
+    try {
+      // Update email in global state before generating if changed
+      const currentData = { ...data, clientEmail: email, location: location };
+      onUpdateData(currentData);
+
+      // 1. Generate PDF (Async now because it loads fonts)
+      const { blob, fileName } = await generateAndDownloadPdf(currentData);
+      setPdfFile({ blob, fileName });
+
+      // 2. Save to Database (IndexedDB)
+      await saveInspectionToDb(currentData);
+
+      // 3. Save to Supabase (Cloud) - Only if Online
+      if (isOnline) {
+        try {
+          const { error } = await supabase.from('inspections').insert({
+            client_name: currentData.clientName,
+            client_email: currentData.clientEmail,
+            inspection_date: new Date().toISOString(),
+            next_inspection_date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString(),
+            location: currentData.location,
+            reminder_sent: false
+          });
+          if (error) throw error;
+          console.log("Saved to Supabase");
+        } catch (supaError) {
+          console.error("Supabase save error:", supaError);
+          // Don't block user flow if cloud save fails (e.g. offline)
+        }
+      } else {
+        console.log("Offline - skipping cloud save");
+      }
+
+      setIsSubmitted(true);
+    } catch (error) {
+      console.error("Error during finalization:", error);
+      alert("Wystąpił błąd podczas zapisywania danych lub generowania PDF.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSendEmail = async () => {
     if (!pdfFile || !email) return;
