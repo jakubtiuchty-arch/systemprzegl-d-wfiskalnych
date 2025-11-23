@@ -269,8 +269,7 @@ const DashboardScreen: React.FC = () => {
                             <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                 <tr>
                                     <th className="px-6 py-3">Data</th>
-                                    <th className="px-6 py-3">Klient</th>
-                                    <th className="px-6 py-3">NIP</th>
+                                    <th className="px-6 py-3">Nadleśnictwo</th>
                                     <th className="px-6 py-3 text-right">Akcje</th>
                                 </tr>
                             </thead>
@@ -281,7 +280,6 @@ const DashboardScreen: React.FC = () => {
                                             {new Date(inspection.inspection_date).toLocaleDateString()}
                                         </td>
                                         <td className="px-6 py-4 text-gray-600">{inspection.client_name}</td>
-                                        <td className="px-6 py-4 text-gray-500">{inspection.client_nip}</td>
                                         <td className="px-6 py-4 text-right">
                                             <button
                                                 onClick={() => handleDelete(inspection.id)}
