@@ -213,8 +213,8 @@ export const generateMonthlySettlement = async (stats: any, servicemanName: stri
     head: [['Podsumowanie', 'Wartość']],
     body: [
       ['Ilość przeglądów', `${stats.count} szt.`],
-      ['Stawka za przegląd (Netto)', '50.00 PLN'],
-      ['Do wypłaty (Netto)', `${stats.earnings.toFixed(2)} PLN`],
+      ['Stawka za przegląd (Na rękę)', '50.00 PLN'],
+      ['Do wypłaty (Na rękę)', `${stats.earnings.toFixed(2)} PLN`],
       ['Przychód Firmy (Netto)', `${stats.revenue.toFixed(2)} PLN`],
     ],
     theme: 'striped',
