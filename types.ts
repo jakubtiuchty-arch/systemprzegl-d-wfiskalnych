@@ -22,6 +22,7 @@ export enum AppScreen {
   START = 'START',
   SCAN = 'SCAN',
   FINALIZE = 'FINALIZE',
+  DASHBOARD = 'DASHBOARD',
 }
 
 declare global {
