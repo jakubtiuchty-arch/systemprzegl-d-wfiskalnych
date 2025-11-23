@@ -198,7 +198,7 @@ const DashboardScreen: React.FC = () => {
                     <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
                         <h2 className="font-bold text-gray-800 flex items-center gap-2">
                             <FileText size={20} className="text-gray-500" />
-                            Lista Szczegółowa (Edycja)
+                            Lista przeglądów
                         </h2>
                     </div>
                     <div className="overflow-x-auto">
