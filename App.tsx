@@ -4,6 +4,7 @@ import StartScreen from './components/StartScreen';
 import ScanScreen from './components/ScanScreen';
 import FinalizeScreen from './components/FinalizeScreen';
 import LoginScreen from './components/LoginScreen';
+import DashboardScreen from './components/DashboardScreen';
 import { supabase } from './services/supabase';
 import { Session } from '@supabase/supabase-js';
 import { processQueue } from './services/syncService';
@@ -25,6 +26,11 @@ const App: React.FC = () => {
   });
 
   useEffect(() => {
+    // Check URL for dashboard access
+    if (window.location.pathname === '/dashboard') {
+      setCurrentScreen(AppScreen.DASHBOARD);
+    }
+
     // Auth Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -82,6 +88,11 @@ const App: React.FC = () => {
   const handleUpdateData = (newData: InspectionData) => {
     setData(newData);
   };
+
+  // Simple routing based on state
+  if (currentScreen === AppScreen.DASHBOARD) {
+    return <DashboardScreen />;
+  }
 
   return (
     <div className="h-screen w-full overflow-hidden bg-gray-100 font-sans">
