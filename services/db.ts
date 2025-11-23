@@ -169,3 +169,12 @@ export const deleteInspection = async (id: number) => {
 
   if (error) throw error;
 };
+
+export const deleteInspections = async (ids: number[]) => {
+  const { error } = await supabase
+    .from('inspections')
+    .delete()
+    .in('id', ids);
+
+  if (error) throw error;
+};
