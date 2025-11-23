@@ -129,16 +129,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           const base64data = reader.result as string;
           const content = base64data.split(',')[1];
 
-          const now = new Date();
-          const deadline = new Date(now);
-          deadline.setFullYear(deadline.getFullYear() + 2);
-          const reminder = new Date(deadline);
-          reminder.setDate(reminder.getDate() - 14);
-
-          const deadlineStr = deadline.toLocaleDateString();
-          const reminderStr = reminder.toLocaleDateString();
-
-          // Queue both emails
+          // Queue client email only
           await addToQueue({
             to: email,
             subject: getEmailSubject(data.clientName),
@@ -146,14 +137,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
             attachments: [{ filename: pdfFile.fileName, content: content }]
           });
 
-          await addToQueue({
-            to: 'jakub.tiuchty@takma.com.pl',
-            subject: getReminderEmailSubject(data.clientName, deadlineStr),
-            html: getReminderEmailHtml(data.clientName, deadlineStr, reminderStr),
-            attachments: [{ filename: pdfFile.fileName, content: content }]
-          });
-
-          alert("Brak sieci. Maile dodane do kolejki i zostaną wysłane automatycznie po odzyskaniu zasięgu.");
+          alert("Brak sieci. Mail do klienta dodany do kolejki i zostanie wysłany automatycznie po odzyskaniu zasięgu.");
           setIsGenerating(false);
         };
       } catch (error) {
@@ -175,18 +159,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
         // Remove data:application/pdf;base64, prefix
         const content = base64data.split(',')[1];
 
-        // Calculate dates for reminder
-        const now = new Date();
-        const deadline = new Date(now);
-        deadline.setFullYear(deadline.getFullYear() + 2);
-        const reminder = new Date(deadline);
-        reminder.setDate(reminder.getDate() - 14);
-
-        const deadlineStr = deadline.toLocaleDateString();
-        const reminderStr = reminder.toLocaleDateString();
-
         try {
-          const sendClientEmail = fetch('/api/send-email', {
+          const sendClientEmail = await fetch('/api/send-email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -197,30 +171,14 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
             }),
           });
 
-          const sendReminderEmail = fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: 'jakub.tiuchty@takma.com.pl',
-              subject: getReminderEmailSubject(data.clientName, deadlineStr),
-              html: getReminderEmailHtml(data.clientName, deadlineStr, reminderStr),
-              // Optional: attach protocol to reminder as well?
-              attachments: [{ filename: pdfFile.fileName, content: content }]
-            }),
-          });
-
-          const [clientRes, reminderRes] = await Promise.all([sendClientEmail, sendReminderEmail]);
-
-          if (clientRes.ok && reminderRes.ok) {
-            alert("Wysłano maile: Protokół do klienta oraz Przypomnienie do biura.");
+          if (sendClientEmail.ok) {
+            alert("Wysłano protokół do klienta.");
           } else {
-            console.error("Client Email:", await clientRes.json().catch(() => 'ok'));
-            console.error("Reminder Email:", await reminderRes.json().catch(() => 'ok'));
-            alert("Wystąpił problem z wysyłką jednego z maili. Sprawdź konsolę.");
+            throw new Error("Błąd wysyłania maila");
           }
-        } catch (e) {
-          console.error(e);
-          alert("Błąd połączenia z serwerem.");
+        } catch (error) {
+          console.error("Error sending email:", error);
+          alert("Wystąpił problem z wysyłką maila.");
         } finally {
           setIsGenerating(false);
         }
