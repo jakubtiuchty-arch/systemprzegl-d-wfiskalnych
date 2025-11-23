@@ -17,6 +17,8 @@ export async function GET(request: Request) {
     // }
 
     try {
+        const hasServiceKey = !!process.env.SUPABASE_SERVICE_ROLE_KEY;
+
         // 1. Calculate target date: Today + 14 days
         const url = new URL(request.url);
         const overrideDate = url.searchParams.get('date');
@@ -48,6 +50,7 @@ export async function GET(request: Request) {
                 <html>
                 <body style="font-family: sans-serif; padding: 20px;">
                     <h1>Status Automatu</h1>
+                    ${!hasServiceKey ? '<p style="color: red; font-weight: bold;">⚠️ BŁĄD: Brak klucza SUPABASE_SERVICE_ROLE_KEY! Automat nie ma dostępu do bazy.</p>' : ''}
                     <p>📅 Sprawdzana data: <strong>${targetDateStr}</strong></p>
                     <p>ℹ️ Wynik: <strong>Brak przeglądów do przypomnienia na ten dzień.</strong></p>
                     <hr>
