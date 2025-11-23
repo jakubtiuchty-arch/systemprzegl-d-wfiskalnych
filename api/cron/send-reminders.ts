@@ -44,12 +44,19 @@ export async function GET(request: Request) {
         if (error) throw error;
 
         if (!inspections || inspections.length === 0) {
-            return new Response(JSON.stringify({
-                message: `No reminders to send for date: ${targetDateStr}`,
-                targetDate: targetDateStr
-            }), {
+            return new Response(`
+                <html>
+                <body style="font-family: sans-serif; padding: 20px;">
+                    <h1>Status Automatu</h1>
+                    <p>📅 Sprawdzana data: <strong>${targetDateStr}</strong></p>
+                    <p>ℹ️ Wynik: <strong>Brak przeglądów do przypomnienia na ten dzień.</strong></p>
+                    <hr>
+                    <p><small>Możesz wymusić inną datę dodając ?date=YYYY-MM-DD do adresu.</small></p>
+                </body>
+                </html>
+            `, {
                 status: 200,
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'text/html; charset=utf-8' },
             });
         }
 
@@ -102,16 +109,34 @@ export async function GET(request: Request) {
             }
         }
 
-        return new Response(JSON.stringify({ message: 'Processed reminders', results }), {
+        return new Response(`
+            <html>
+            <body style="font-family: sans-serif; padding: 20px;">
+                <h1>Status Automatu</h1>
+                <p>📅 Sprawdzana data: <strong>${targetDateStr}</strong></p>
+                <p>✅ Przetworzono: <strong>${results.length}</strong> przypomnień.</p>
+                <ul>
+                    ${results.map(r => `<li>ID: ${r.id} - Status: ${r.status}</li>`).join('')}
+                </ul>
+            </body>
+            </html>
+        `, {
             status: 200,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
         });
 
     } catch (err: any) {
         console.error('Cron job failed:', err);
-        return new Response(JSON.stringify({ error: err.message }), {
+        return new Response(`
+            <html>
+            <body style="font-family: sans-serif; padding: 20px; color: red;">
+                <h1>Błąd Automatu</h1>
+                <p>${err.message}</p>
+            </body>
+            </html>
+        `, {
             status: 500,
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'text/html; charset=utf-8' },
         });
     }
 }
