@@ -1,7 +1,6 @@
-
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
-import { getInspectionsStats, MonthlyStats, deleteInspection } from '../services/db';
+import { getInspectionsStats, MonthlyStats, deleteInspection, deleteInspections } from '../services/db';
 import { LogOut, TrendingUp, Calendar, FileText, Printer, Loader2, Trash2, CheckSquare, Square } from 'lucide-react';
 import { generateMonthlySettlement, generateBulkMonthlySettlement } from '../services/pdfService';
 
@@ -11,6 +10,7 @@ const DashboardScreen: React.FC = () => {
     const [year, setYear] = useState(new Date().getFullYear());
     const [userEmail, setUserEmail] = useState('');
     const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+    const [selectedInspections, setSelectedInspections] = useState<number[]>([]);
 
     useEffect(() => {
         loadData();
@@ -26,6 +26,7 @@ const DashboardScreen: React.FC = () => {
             const data = await getInspectionsStats(user.id, year);
             setStats(data);
             setSelectedMonths([]); // Reset selection on reload
+            setSelectedInspections([]);
         } catch (error: any) {
             console.error("Error loading dashboard data:", error);
             alert("Błąd ładowania danych: " + (error.message || error));
@@ -47,6 +48,36 @@ const DashboardScreen: React.FC = () => {
         } catch (error) {
             console.error("Error deleting inspection:", error);
             alert("Błąd usuwania przeglądu.");
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedInspections.length === 0) return;
+        if (!window.confirm(`Czy na pewno chcesz usunąć ${selectedInspections.length} przeglądów? Operacja jest nieodwracalna.`)) return;
+
+        try {
+            await deleteInspections(selectedInspections);
+            await loadData();
+        } catch (error) {
+            console.error("Error deleting inspections:", error);
+            alert("Błąd usuwania przeglądów.");
+        }
+    };
+
+    const toggleInspectionSelection = (id: number) => {
+        setSelectedInspections(prev =>
+            prev.includes(id)
+                ? prev.filter(i => i !== id)
+                : [...prev, id]
+        );
+    };
+
+    const toggleSelectAllInspections = () => {
+        if (!stats) return;
+        if (selectedInspections.length === stats.raw.length) {
+            setSelectedInspections([]);
+        } else {
+            setSelectedInspections(stats.raw.map(i => i.id));
         }
     };
 
@@ -258,16 +289,34 @@ const DashboardScreen: React.FC = () => {
 
                 {/* Detailed Inspections List */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
-                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                    <div className="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                         <h2 className="font-bold text-gray-800 flex items-center gap-2">
                             <FileText size={20} className="text-gray-500" />
                             Lista przeglądów
                         </h2>
+                        {selectedInspections.length > 0 && (
+                            <button
+                                onClick={handleBulkDelete}
+                                className="bg-red-600 hover:bg-red-700 text-white text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                            >
+                                <Trash2 size={16} />
+                                Usuń Zaznaczone ({selectedInspections.length})
+                            </button>
+                        )}
                     </div>
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                 <tr>
+                                    <th className="px-6 py-3 w-12">
+                                        <button onClick={toggleSelectAllInspections} className="text-gray-400 hover:text-gray-600">
+                                            {stats?.raw.length && selectedInspections.length === stats.raw.length ? (
+                                                <CheckSquare size={20} className="text-blue-600" />
+                                            ) : (
+                                                <Square size={20} />
+                                            )}
+                                        </button>
+                                    </th>
                                     <th className="px-6 py-3">Data</th>
                                     <th className="px-6 py-3">Nadleśnictwo</th>
                                     <th className="px-6 py-3 text-right">Akcje</th>
@@ -275,7 +324,16 @@ const DashboardScreen: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {stats?.raw.map((inspection) => (
-                                    <tr key={inspection.id} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={inspection.id} className={`hover:bg-gray-50 transition-colors ${selectedInspections.includes(inspection.id) ? 'bg-red-50' : ''}`}>
+                                        <td className="px-6 py-4">
+                                            <button onClick={() => toggleInspectionSelection(inspection.id)} className="text-gray-400 hover:text-gray-600">
+                                                {selectedInspections.includes(inspection.id) ? (
+                                                    <CheckSquare size={20} className="text-blue-600" />
+                                                ) : (
+                                                    <Square size={20} />
+                                                )}
+                                            </button>
+                                        </td>
                                         <td className="px-6 py-4 text-gray-900">
                                             {new Date(inspection.inspection_date).toLocaleDateString()}
                                         </td>
