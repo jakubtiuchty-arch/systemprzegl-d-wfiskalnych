@@ -31,6 +31,7 @@ W ustawieniach projektu Vercel (**Settings → Environment Variables**) dodaj:
 RESEND_API_KEY=twój_klucz_resend
 VITE_SUPABASE_URL=https://jwonohhnzvwyplnmfqgp.supabase.co
 VITE_SUPABASE_ANON_KEY=sb_publishable_2XAuUs2e3rtudGtwpoe6BQ_rZniezir
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key # Found in Project Settings -> API -> service_role secret. Required for Cron Jobs.
 ```
 
 ⚠️ **WAŻNE**: Klucz `RESEND_API_KEY` musisz dodać (nie mam go w `.env.local`).
