@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { getInspectionsStats, MonthlyStats, deleteInspection } from '../services/db';
-import { LogOut, TrendingUp, Calendar, FileText, Printer, Loader2, Trash2 } from 'lucide-react';
-import { generateMonthlySettlement } from '../services/pdfService';
+import { LogOut, TrendingUp, Calendar, FileText, Printer, Loader2, Trash2, CheckSquare, Square } from 'lucide-react';
+import { generateMonthlySettlement, generateBulkMonthlySettlement } from '../services/pdfService';
 
 const DashboardScreen: React.FC = () => {
     const [stats, setStats] = useState<{ monthly: MonthlyStats[], total: any, raw: any[] } | null>(null);
     const [loading, setLoading] = useState(true);
     const [year, setYear] = useState(new Date().getFullYear());
     const [userEmail, setUserEmail] = useState('');
+    const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
 
     useEffect(() => {
         loadData();
@@ -24,6 +25,7 @@ const DashboardScreen: React.FC = () => {
             setUserEmail(user.email || '');
             const data = await getInspectionsStats(user.id, year);
             setStats(data);
+            setSelectedMonths([]); // Reset selection on reload
         } catch (error: any) {
             console.error("Error loading dashboard data:", error);
             alert("Błąd ładowania danych: " + (error.message || error));
@@ -52,15 +54,49 @@ const DashboardScreen: React.FC = () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) return;
-
-            // We need to pass the user email or name for the report
-            // Assuming user metadata has full_name or we use email
             const servicemanName = user.user_metadata?.full_name || user.email || 'Serwisant';
-
             generateMonthlySettlement(monthStats, servicemanName);
         } catch (error) {
             console.error("Error generating report:", error);
             alert("Błąd generowania raportu.");
+        }
+    };
+
+    const handlePrintSelected = async () => {
+        if (selectedMonths.length === 0) return;
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+            const servicemanName = user.user_metadata?.full_name || user.email || 'Serwisant';
+
+            // Filter stats for selected months
+            const selectedStats = stats?.monthly.filter(m => selectedMonths.includes(m.month)) || [];
+
+            // Sort by month descending (or ascending if preferred)
+            selectedStats.sort((a, b) => b.month.localeCompare(a.month));
+
+            await generateBulkMonthlySettlement(selectedStats, servicemanName);
+        } catch (error) {
+            console.error("Error generating bulk report:", error);
+            alert("Błąd generowania raportu zbiorczego.");
+        }
+    };
+
+    const toggleMonthSelection = (month: string) => {
+        setSelectedMonths(prev =>
+            prev.includes(month)
+                ? prev.filter(m => m !== month)
+                : [...prev, month]
+        );
+    };
+
+    const toggleSelectAll = () => {
+        if (!stats) return;
+        if (selectedMonths.length === stats.monthly.length) {
+            setSelectedMonths([]);
+        } else {
+            setSelectedMonths(stats.monthly.map(m => m.month));
         }
     };
 
@@ -151,12 +187,30 @@ const DashboardScreen: React.FC = () => {
                             <Calendar size={20} className="text-gray-500" />
                             Rozliczenie Miesięczne
                         </h2>
+                        {selectedMonths.length > 0 && (
+                            <button
+                                onClick={handlePrintSelected}
+                                className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                            >
+                                <Printer size={16} />
+                                Drukuj Zaznaczone ({selectedMonths.length})
+                            </button>
+                        )}
                     </div>
 
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="bg-gray-50 text-gray-500 font-medium border-b border-gray-200">
                                 <tr>
+                                    <th className="px-6 py-3 w-12">
+                                        <button onClick={toggleSelectAll} className="text-gray-400 hover:text-gray-600">
+                                            {stats?.monthly.length && selectedMonths.length === stats.monthly.length ? (
+                                                <CheckSquare size={20} className="text-blue-600" />
+                                            ) : (
+                                                <Square size={20} />
+                                            )}
+                                        </button>
+                                    </th>
                                     <th className="px-6 py-3">Miesiąc</th>
                                     <th className="px-6 py-3">Ilość Przeglądów</th>
                                     <th className="px-6 py-3">Twój Zarobek</th>
@@ -166,7 +220,16 @@ const DashboardScreen: React.FC = () => {
                             </thead>
                             <tbody className="divide-y divide-gray-200">
                                 {stats?.monthly.map((month) => (
-                                    <tr key={month.month} className="hover:bg-gray-50 transition-colors">
+                                    <tr key={month.month} className={`hover:bg-gray-50 transition-colors ${selectedMonths.includes(month.month) ? 'bg-blue-50' : ''}`}>
+                                        <td className="px-6 py-4">
+                                            <button onClick={() => toggleMonthSelection(month.month)} className="text-gray-400 hover:text-gray-600">
+                                                {selectedMonths.includes(month.month) ? (
+                                                    <CheckSquare size={20} className="text-blue-600" />
+                                                ) : (
+                                                    <Square size={20} />
+                                                )}
+                                            </button>
+                                        </td>
                                         <td className="px-6 py-4 font-medium text-gray-900">{month.month}</td>
                                         <td className="px-6 py-4 text-gray-600">{month.count} szt.</td>
                                         <td className="px-6 py-4 text-green-600 font-bold">{month.earnings} PLN</td>
@@ -183,7 +246,7 @@ const DashboardScreen: React.FC = () => {
                                 ))}
                                 {stats?.monthly.length === 0 && (
                                     <tr>
-                                        <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                                        <td colSpan={6} className="px-6 py-8 text-center text-gray-500">
                                             Brak danych za wybrany rok.
                                         </td>
                                     </tr>
