@@ -1,4 +1,4 @@
-```javascript
+
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase';
 import { getInspectionsStats, MonthlyStats, deleteInspection } from '../services/db';
@@ -220,7 +220,7 @@ const DashboardScreen: React.FC = () => {
                                         <td className="px-6 py-4 text-gray-600">{inspection.client_name}</td>
                                         <td className="px-6 py-4 text-gray-500">{inspection.client_nip}</td>
                                         <td className="px-6 py-4 text-right">
-                                            <button 
+                                            <button
                                                 onClick={() => handleDelete(inspection.id)}
                                                 className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-lg transition-colors"
                                                 title="Usuń ten przegląd"
