@@ -180,6 +180,70 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   return { fileName, blob };
 };
 
+export const generateMonthlySettlement = (stats: any, servicemanName: string) => {
+  const doc = new jsPDF();
+
+  // Add font
+  doc.addFileToVFS("Roboto-Regular.ttf", fontBase64);
+  doc.addFont("Roboto-Regular.ttf", "Roboto", "normal");
+  doc.setFont("Roboto");
+
+  // Header
+  doc.setFontSize(18);
+  doc.text(`Rozliczenie Serwisowe: ${stats.month}`, 14, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Serwisant: ${servicemanName}`, 14, 30);
+  doc.text(`Data wygenerowania: ${new Date().toLocaleDateString()}`, 14, 36);
+
+  // Summary Table
+  autoTable(doc, {
+    startY: 45,
+    head: [['Podsumowanie', 'Wartość']],
+    body: [
+      ['Ilość przeglądów', `${stats.count} szt.`],
+      ['Stawka za przegląd (Netto)', '50.00 PLN'],
+      ['Do wypłaty (Netto)', `${stats.earnings.toFixed(2)} PLN`],
+      ['Przychód Firmy (Netto)', `${stats.revenue.toFixed(2)} PLN`],
+    ],
+    theme: 'striped',
+    headStyles: { fillColor: [41, 128, 185] },
+    styles: { font: "Roboto", fontSize: 10 },
+  });
+
+  // Detailed List
+  doc.text("Szczegółowy wykaz przeglądów:", 14, (doc as any).lastAutoTable.finalY + 15);
+
+  const tableData = stats.inspections.map((item: any, index: number) => [
+    index + 1,
+    new Date(item.inspection_date).toLocaleDateString(),
+    item.client_name,
+    item.location || '-',
+    '50.00 PLN'
+  ]);
+
+  autoTable(doc, {
+    startY: (doc as any).lastAutoTable.finalY + 20,
+    head: [['Lp.', 'Data', 'Klient', 'Lokalizacja', 'Kwota']],
+    body: tableData,
+    theme: 'grid',
+    headStyles: { fillColor: [46, 204, 113] },
+    styles: { font: "Roboto", fontSize: 9 },
+  });
+
+  // Footer
+  const finalY = (doc as any).lastAutoTable.finalY + 20;
+  doc.setFontSize(10);
+  doc.text("......................................................", 14, finalY);
+  doc.text("Podpis Serwisanta", 14, finalY + 5);
+
+  doc.text("......................................................", 120, finalY);
+  doc.text("Zatwierdzenie (Biuro)", 120, finalY + 5);
+
+  // Save
+  doc.save(`Rozliczenie_${servicemanName.replace(/\s+/g, '_')}_${stats.month}.pdf`);
+};
+
 export const generateCalendarEvent = (clientName: string): string => {
   const now = new Date();
   const targetDate = new Date(now.setFullYear(now.getFullYear() + 2));
