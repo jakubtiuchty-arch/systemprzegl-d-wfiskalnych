@@ -4,14 +4,43 @@ export const getEmailSubject = (clientName: string) => {
 
 export const getEmailHtml = (clientName: string, date: string) => {
   return `
-    <div style="font-family: sans-serif; color: #333;">
-      <p>Dzień dobry,</p>
-      <p>W załączniku przesyłam protokół przeglądu technicznego drukarek fiskalnych wykonanego w dniu <strong>${date}</strong>.</p>
-      <br>
-      <p>Pozdrawiamy,</p>
-      <p><strong>Zespół TAKMA</strong></p>
-      <hr>
-      <p style="font-size: 12px; color: #888;">Wiadomość wygenerowana automatycznie przez System przeglądów fiskalnych.</p>
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
+      <div style="background-color: #2563eb; padding: 20px; text-align: center;">
+        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">Protokół Przeglądu</h1>
+      </div>
+      
+      <div style="padding: 30px;">
+        <p style="font-size: 16px; line-height: 1.5;">Dzień dobry,</p>
+        
+        <p style="font-size: 16px; line-height: 1.5;">
+          W załączniku przesyłamy <strong>protokół przeglądu technicznego drukarek fiskalnych</strong>, który został wykonany w dniu ${date}.
+        </p>
+        
+        <div style="background-color: #f8fafc; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+          <p style="margin: 0; font-weight: bold; color: #1e40af;">Prosimy o:</p>
+          <ol style="margin: 10px 0 0 20px; padding: 0; color: #334155;">
+            <li style="margin-bottom: 5px;">Wydrukowanie protokołu</li>
+            <li style="margin-bottom: 5px;">Podpisanie dokumentu</li>
+            <li style="margin-bottom: 5px;">Odesłanie skanu na adres: <a href="mailto:fiskalne@takma.com.pl" style="color: #2563eb; text-decoration: none; font-weight: bold;">fiskalne@takma.com.pl</a></li>
+          </ol>
+        </div>
+
+        <p style="font-size: 16px; line-height: 1.5; margin-top: 30px;">
+          W razie pytań pozostajemy do dyspozycji.
+        </p>
+        
+        <div style="margin-top: 40px; border-top: 1px solid #e0e0e0; padding-top: 20px;">
+          <p style="margin: 0; font-weight: bold; color: #1e293b;">Zespół TAKMA</p>
+          <p style="margin: 5px 0 0 0; font-size: 14px; color: #64748b;">
+            <a href="mailto:kontakt@rejestratory.info" style="color: #64748b; text-decoration: none;">kontakt@rejestratory.info</a> | 
+            <a href="https://rejestratory.info" style="color: #64748b; text-decoration: none;">rejestratory.info</a>
+          </p>
+        </div>
+      </div>
+      
+      <div style="background-color: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #94a3b8;">
+        Wiadomość wygenerowana automatycznie przez System Przeglądów Fiskalnych
+      </div>
     </div>
   `;
 };
