@@ -95,3 +95,68 @@ export const getAllInspections = async (): Promise<InspectionRecord[]> => {
 };
 
 export { openDB, QUEUE_STORE_NAME };
+
+import { supabase } from './supabase';
+
+export interface MonthlyStats {
+  month: string; // YYYY-MM
+  count: number;
+  earnings: number; // count * 50
+  revenue: number; // count * 200
+  inspections: any[];
+}
+
+export const getInspectionsStats = async (userId: string, year: number) => {
+  const startDate = `${year}-01-01`;
+  const endDate = `${year}-12-31`;
+
+  const { data, error } = await supabase
+    .from('inspections')
+    .select('*')
+    .eq('user_id', userId)
+    .gte('inspection_date', startDate)
+    .lte('inspection_date', endDate)
+    .order('inspection_date', { ascending: false });
+
+  if (error) throw error;
+
+  // Group by month
+  const statsByMonth: Record<string, MonthlyStats> = {};
+  let totalCount = 0;
+  let totalEarnings = 0;
+  let totalRevenue = 0;
+
+  data.forEach(inspection => {
+    const date = new Date(inspection.inspection_date);
+    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+    if (!statsByMonth[monthKey]) {
+      statsByMonth[monthKey] = {
+        month: monthKey,
+        count: 0,
+        earnings: 0,
+        revenue: 0,
+        inspections: []
+      };
+    }
+
+    statsByMonth[monthKey].count++;
+    statsByMonth[monthKey].earnings += 50;
+    statsByMonth[monthKey].revenue += 200;
+    statsByMonth[monthKey].inspections.push(inspection);
+
+    totalCount++;
+    totalEarnings += 50;
+    totalRevenue += 200;
+  });
+
+  return {
+    monthly: Object.values(statsByMonth).sort((a, b) => b.month.localeCompare(a.month)),
+    total: {
+      count: totalCount,
+      earnings: totalEarnings,
+      revenue: totalRevenue
+    },
+    raw: data
+  };
+};
