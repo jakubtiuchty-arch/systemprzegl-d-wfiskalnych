@@ -173,7 +173,7 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
 
   // Save
   const safeClientName = normalizeText(data.clientName).replace(/\s+/g, '_');
-  const fileName = `Protokol_${safeClientName}_${dateStr}.pdf`;
+  const fileName = `Protokol_Nadlesnictwo_${safeClientName}_${dateStr}.pdf`;
   // doc.save(fileName); // Removed auto-download
 
   const blob = doc.output('blob');
