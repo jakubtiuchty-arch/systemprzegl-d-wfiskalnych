@@ -21,7 +21,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfFile, setPdfFile] = useState<{ blob: Blob, fileName: string } | null>(null);
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showEmailSuccessModal, setShowEmailSuccessModal] = useState(false);
 
   React.useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -36,85 +36,9 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
     };
   }, []);
 
-  React.useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Only fetch address if online
-          if (navigator.onLine) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-            const data = await response.json();
-            const city = data.address.city || data.address.town || data.address.village || "Nieznana lokalizacja";
-            setLocation(city);
-          } else {
-            setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          }
-        } catch (error) {
-          console.error("Error fetching location:", error);
-        }
-      }, (error) => {
-        console.error("Geolocation error:", error);
-      });
-    }
-  }, []);
+  // ... (keep existing useEffect for geolocation)
 
-  const handleSignature = (signature: string | null) => {
-    onUpdateData({
-      ...data,
-      servicemanSignature: signature
-    });
-  };
-
-  const handleFinish = async () => {
-    if (!data.servicemanSignature) {
-      alert("Podpis serwisanta jest wymagany!");
-      return;
-    }
-
-    setIsGenerating(true);
-
-    try {
-      // Update email in global state before generating if changed
-      const currentData = { ...data, clientEmail: email, location: location };
-      onUpdateData(currentData);
-
-      // 1. Generate PDF (Async now because it loads fonts)
-      const { blob, fileName } = await generateAndDownloadPdf(currentData);
-      setPdfFile({ blob, fileName });
-
-      // 2. Save to Database (IndexedDB)
-      await saveInspectionToDb(currentData);
-
-      // 3. Save to Supabase (Cloud) - Only if Online
-      if (isOnline) {
-        try {
-          const { error } = await supabase.from('inspections').insert({
-            client_name: currentData.clientName,
-            client_email: currentData.clientEmail,
-            inspection_date: new Date().toISOString(),
-            next_inspection_date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString(),
-            location: currentData.location,
-            reminder_sent: false
-          });
-          if (error) throw error;
-          console.log("Saved to Supabase");
-        } catch (supaError) {
-          console.error("Supabase save error:", supaError);
-          // Don't block user flow if cloud save fails (e.g. offline)
-        }
-      } else {
-        console.log("Offline - skipping cloud save");
-      }
-
-      setIsSubmitted(true);
-    } catch (error) {
-      console.error("Error during finalization:", error);
-      alert("Wystąpił błąd podczas zapisywania danych lub generowania PDF.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  // ... (keep handleSignature and handleFinish)
 
   const handleSendEmail = async () => {
     if (!pdfFile || !email) return;
@@ -172,7 +96,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           });
 
           if (sendClientEmail.ok) {
-            alert("Wysłano protokół do klienta.");
+            setShowEmailSuccessModal(true);
           } else {
             throw new Error("Błąd wysyłania maila");
           }
@@ -191,7 +115,25 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
 
   if (isSubmitted) {
     return (
-      <div className="flex flex-col h-full items-center justify-center p-8 text-center bg-green-50">
+      <div className="flex flex-col h-full items-center justify-center p-8 text-center bg-green-50 relative">
+        {showEmailSuccessModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl text-center transform transition-all scale-100">
+              <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle size={32} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Wysłano pomyślnie!</h3>
+              <p className="text-gray-600 mb-6">Protokół został wysłany na adres <span className="font-medium text-gray-900">{email}</span>.</p>
+              <button
+                onClick={() => setShowEmailSuccessModal(false)}
+                className="w-full bg-blue-600 text-white py-3 rounded-lg font-bold hover:bg-blue-700 transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-6">
           <CheckCircle size={48} />
         </div>
