@@ -40,7 +40,6 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
       const { error } = await supabase.from('inspections').insert({
         client_name: 'TEST PRZYPOMNIENIA',
         client_email: 'test@example.com',
-        client_nip: '0000000000',
         inspection_date: new Date().toISOString().split('T')[0],
         next_inspection_date: targetDateStr,
         reminder_sent: false,
