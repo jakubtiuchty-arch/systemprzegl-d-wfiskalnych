@@ -55,6 +55,34 @@ const App: React.FC = () => {
       processQueue();
     }
 
+    // Geolocation - Start immediately 🌍
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          let locationString = `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+
+          // Only fetch address if online
+          if (navigator.onLine) {
+            try {
+              const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+              const geoData = await response.json();
+              const city = geoData.address.city || geoData.address.town || geoData.address.village;
+              if (city) locationString = city;
+            } catch (e) {
+              console.warn("Reverse geocoding failed", e);
+            }
+          }
+
+          setData(prev => ({ ...prev, location: locationString }));
+        } catch (error) {
+          console.error("Error processing location:", error);
+        }
+      }, (error) => {
+        console.error("Geolocation error:", error);
+      });
+    }
+
     return () => {
       subscription.unsubscribe();
       window.removeEventListener('online', handleOnline);

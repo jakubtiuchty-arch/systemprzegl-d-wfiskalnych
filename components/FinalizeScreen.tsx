@@ -17,7 +17,7 @@ interface FinalizeScreenProps {
 const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onBack }) => {
   // Initialize from data.clientEmail captured in StartScreen
   const [email, setEmail] = useState(data.clientEmail || '');
-  const [location, setLocation] = useState<string>('');
+  const [location, setLocation] = useState<string>(data.location || '');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [pdfFile, setPdfFile] = useState<{ blob: Blob, fileName: string } | null>(null);
@@ -37,28 +37,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
     };
   }, []);
 
-  React.useEffect(() => {
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          // Only fetch address if online
-          if (navigator.onLine) {
-            const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-            const data = await response.json();
-            const city = data.address.city || data.address.town || data.address.village || "Nieznana lokalizacja";
-            setLocation(city);
-          } else {
-            setLocation(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          }
-        } catch (error) {
-          console.error("Error fetching location:", error);
-        }
-      }, (error) => {
-        console.error("Geolocation error:", error);
-      });
-    }
-  }, []);
+  // Geolocation is now handled in App.tsx globally
+  // We just use data.location passed via props
 
   const handleSignature = (signature: string | null) => {
     onUpdateData({
