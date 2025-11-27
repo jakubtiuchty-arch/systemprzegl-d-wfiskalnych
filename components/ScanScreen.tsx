@@ -35,76 +35,39 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ... keyboard hiding logic ...
+  // Aggressive focus management for hardware scanners
   useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.setAttribute('readonly', 'readonly');
-      inputRef.current.blur();
-      setTimeout(() => {
-        if (inputRef.current) {
-          inputRef.current.removeAttribute('readonly');
-        }
-      }, 500);
-    }
-  }, []);
-
-  // Validate N/U format: Starts with 3 letters (e.g. BFL, CAZ)
-  const isValidNuCode = (code: string): boolean => {
-    // Regex: 3 letters (case insensitive), optional space, followed by digits/chars
-    return /^[A-Z]{3}\s?[A-Z0-9]+$/i.test(code);
-  };
-
-  const handleAddDevice = (serial: string) => {
-    const trimmed = serial.trim();
-    if (!trimmed) return;
-
-    // Check if it's a valid N/U code
-    if (!isValidNuCode(trimmed)) {
-      setLastScannedCode(trimmed);
-      setScanMessage({
-        text: `Zignorowano kod: ${trimmed}. Szukam N/U (3 litery na początku, np. BFL...)`,
-        type: 'error'
-      });
-      // Clear message after 3 seconds
-      setTimeout(() => setScanMessage(null), 3000);
-      return;
-    }
-
-    // Check for duplicates
-    if (devices.some(d => d.serialNumber === trimmed)) {
-      setScanMessage({ text: `Urządzenie ${trimmed} jest już na liście.`, type: 'error' });
-      setTimeout(() => setScanMessage(null), 3000);
-      return;
-    }
-
-    const newDevice: Device = {
-      id: generateId(),
-      serialNumber: trimmed.toUpperCase(), // Standardize to uppercase
-      isWorking: true,
-      timestamp: Date.now(),
+    const focusInput = () => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
     };
 
-    onUpdateDevices([newDevice, ...devices]);
-    setInputSerial('');
-    setScanMessage({ text: `Dodano: ${trimmed.toUpperCase()}`, type: 'success' });
-    setTimeout(() => setScanMessage(null), 2000);
-  };
+    // Focus immediately
+    focusInput();
 
-  // ... global scan listener ...
-  useEffect(() => {
-    window.onScan = (serial: string) => {
-      handleAddDevice(serial);
+    // Re-focus on blur (keep focus trapped for scanning)
+    const handleBlur = () => {
+      // Small timeout to allow UI interactions (like clicking buttons)
+      setTimeout(focusInput, 100);
     };
+
+    const input = inputRef.current;
+    if (input) {
+      input.addEventListener('blur', handleBlur);
+    }
+
+    // Focus on window focus
+    window.addEventListener('focus', focusInput);
+    document.addEventListener('click', focusInput);
+
     return () => {
-      (window as any).onScan = undefined;
+      if (input) {
+        input.removeEventListener('blur', handleBlur);
+      }
+      window.removeEventListener('focus', focusInput);
+      document.removeEventListener('click', focusInput);
     };
-  }, [devices]);
-
-  // ... focus effect ...
-  useEffect(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
