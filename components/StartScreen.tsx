@@ -3,15 +3,25 @@ import { ArrowRight, Settings, LogOut } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
 interface StartScreenProps {
-  onStart: (clientName: string, clientNip: string, clientEmail: string, deviceModel: string) => void;
+  initialLocation?: string;
+  onStart: (clientName: string, clientNip: string, clientEmail: string, deviceModel: string, location: string, inspectionType: 'annual' | 'biennial') => void;
 }
 
-const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
+const StartScreen: React.FC<StartScreenProps> = ({ initialLocation, onStart }) => {
   const [clientName, setClientName] = useState('');
   const [clientNip, setClientNip] = useState('');
   const [clientEmail, setClientEmail] = useState('');
+  const [location, setLocation] = useState(initialLocation || '');
   const [deviceModel, setDeviceModel] = useState('Posnet Temo');
+  const [inspectionType, setInspectionType] = useState<'annual' | 'biennial'>('annual');
   const [error, setError] = useState('');
+
+  // Update local state if prop changes (e.g. GPS found later)
+  React.useEffect(() => {
+    if (initialLocation) {
+      setLocation(initialLocation);
+    }
+  }, [initialLocation]);
 
   const handleStart = () => {
     if (!clientName.trim()) {
@@ -23,7 +33,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
       return;
     }
     // Email is optional, but passed if present
-    onStart(clientName, clientNip, clientEmail, deviceModel);
+    onStart(clientName, clientNip, clientEmail, deviceModel, location, inspectionType);
   };
 
   const handleSignOut = async () => {
@@ -100,17 +110,45 @@ const StartScreen: React.FC<StartScreenProps> = ({ onStart }) => {
 
           <div>
             <label className="block text-xs font-medium text-gray-700 mb-1">
-              Urządzenie
+              Miejsce przeglądu
             </label>
-            <select
-              value={deviceModel}
-              onChange={(e) => setDeviceModel(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white text-sm"
-            >
-              <option value="Posnet Temo">Posnet Temo</option>
-              <option value="Posnet Pospay">Posnet Pospay</option>
-              <option value="Novitus Bono Online">Novitus Bono Online</option>
-            </select>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="np. Trzebnica (lub puste dla GPS)"
+              className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"
+            />
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Urządzenie
+              </label>
+              <select
+                value={deviceModel}
+                onChange={(e) => setDeviceModel(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white text-sm"
+              >
+                <option value="Posnet Temo">Posnet Temo</option>
+                <option value="Posnet Pospay">Posnet Pospay</option>
+                <option value="Novitus Bono Online">Novitus Bono Online</option>
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs font-medium text-gray-700 mb-1">
+                Rodzaj przeglądu
+              </label>
+              <select
+                value={inspectionType}
+                onChange={(e) => setInspectionType(e.target.value as 'annual' | 'biennial')}
+                className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-white text-sm"
+              >
+                <option value="annual">Roczny</option>
+                <option value="biennial">Dwuletni</option>
+              </select>
+            </div>
           </div>
 
           {error && (

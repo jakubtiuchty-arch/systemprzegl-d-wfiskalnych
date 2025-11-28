@@ -99,7 +99,9 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
   };
 
   const handleSendEmail = async () => {
-    if (!pdfFile || !email) return;
+    const recipients = [];
+    if (email) recipients.push(email);
+    recipients.push('handlowy@takma.com.pl');
 
     if (!isOnline) {
       // Add to queue instead of alerting
@@ -111,15 +113,17 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           const base64data = reader.result as string;
           const content = base64data.split(',')[1];
 
-          // Queue client email only
-          await addToQueue({
-            to: email,
-            subject: getEmailSubject(data.clientName),
-            html: getEmailHtml(data.clientName, new Date().toLocaleDateString()),
-            attachments: [{ filename: pdfFile.fileName, content: content }]
-          });
+          // Queue emails for all recipients
+          for (const recipient of recipients) {
+            await addToQueue({
+              to: recipient,
+              subject: getEmailSubject(data.clientName),
+              html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType),
+              attachments: [{ filename: pdfFile.fileName, content: content }]
+            });
+          }
 
-          alert("Brak sieci. Mail do klienta dodany do kolejki i zostanie wysłany automatycznie po odzyskaniu zasięgu.");
+          alert("Brak sieci. Maile dodane do kolejki i zostaną wysłane automatycznie po odzyskaniu zasięgu.");
           setIsGenerating(false);
         };
       } catch (error) {
@@ -142,22 +146,21 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
         const content = base64data.split(',')[1];
 
         try {
-          const sendClientEmail = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              to: email,
-              subject: getEmailSubject(data.clientName),
-              html: getEmailHtml(data.clientName, new Date().toLocaleDateString()),
-              attachments: [{ filename: pdfFile.fileName, content: content }]
-            }),
-          });
-
-          if (sendClientEmail.ok) {
-            setShowEmailSuccessModal(true);
-          } else {
-            throw new Error("Błąd wysyłania maila");
+          // Send emails sequentially
+          for (const recipient of recipients) {
+            await fetch('/api/send-email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                to: recipient,
+                subject: getEmailSubject(data.clientName),
+                html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType),
+                attachments: [{ filename: pdfFile.fileName, content: content }]
+              }),
+            });
           }
+
+          setShowEmailSuccessModal(true);
         } catch (error) {
           console.error("Error sending email:", error);
           alert("Wystąpił problem z wysyłką maila.");

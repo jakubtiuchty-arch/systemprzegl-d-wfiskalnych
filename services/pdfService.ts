@@ -84,7 +84,8 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
   if (fontLoaded) doc.setFont("Roboto", "normal");
   else doc.setFont("helvetica", "normal");
 
-  const headerText = `Trzebnica, ${dateStr}`;
+  const location = data.location || "Trzebnica";
+  const headerText = `${location}, ${dateStr}`;
 
   doc.text(txt(headerText), pageWidth - 15, 15, { align: "right" });
 
@@ -147,7 +148,14 @@ export const generateAndDownloadPdf = async (data: InspectionData) => {
 
   // --- SIGNATURES ---
   // Calculate Y based on table end
-  const finalY = (doc as any).lastAutoTable.finalY + 20;
+  let finalY = (doc as any).lastAutoTable.finalY + 20;
+
+  // Check if we have enough space for signatures (approx 60 units)
+  const pageHeight = doc.internal.pageSize.getHeight();
+  if (finalY + 60 > pageHeight) {
+    doc.addPage();
+    finalY = 20; // Start at top of new page
+  }
 
   // Serviceman Signature
   doc.setFontSize(10);

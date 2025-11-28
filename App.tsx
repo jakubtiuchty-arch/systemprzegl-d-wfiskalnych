@@ -98,8 +98,8 @@ const App: React.FC = () => {
   }
 
   // Step 1: Start Screen -> Capture Client Name, NIP, Email and Device Model
-  const handleStart = (clientName: string, clientNip: string, clientEmail: string, deviceModel: string) => {
-    setData(prev => ({ ...prev, clientName, clientNip, clientEmail, deviceModel }));
+  const handleStart = (clientName: string, clientNip: string, clientEmail: string, deviceModel: string, location: string, inspectionType: 'annual' | 'biennial') => {
+    setData(prev => ({ ...prev, clientName, clientNip, clientEmail, deviceModel, location, inspectionType }));
     setCurrentScreen(AppScreen.SCAN);
   };
 
@@ -127,7 +127,10 @@ const App: React.FC = () => {
       <div className="h-full w-full max-w-xl mx-auto bg-white shadow-2xl overflow-hidden relative">
 
         {currentScreen === AppScreen.START && (
-          <StartScreen onStart={handleStart} />
+          <StartScreen
+            onStart={handleStart}
+            initialLocation={data.location}
+          />
         )}
 
         {currentScreen === AppScreen.SCAN && (

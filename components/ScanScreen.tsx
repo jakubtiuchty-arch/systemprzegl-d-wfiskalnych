@@ -193,6 +193,8 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
             <input
               ref={inputRef}
               type="text"
+              inputMode="none"
+              autoComplete="off"
               value={inputSerial}
               onChange={(e) => setInputSerial(e.target.value)}
               onKeyDown={handleKeyDown}

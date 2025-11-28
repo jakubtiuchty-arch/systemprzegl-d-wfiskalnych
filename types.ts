@@ -16,6 +16,7 @@ export interface InspectionData {
   clientSignature: string | null; // Base64 data URL
   location?: string;
   deviceModel?: string;
+  inspectionType?: 'annual' | 'biennial';
 }
 
 export enum AppScreen {
