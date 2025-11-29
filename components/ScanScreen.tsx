@@ -39,43 +39,48 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
   // Aggressive focus management for hardware scanners
   useEffect(() => {
-    const focusInput = () => {
-      // Only force focus if NOT in manual mode (to avoid fighting user)
-      // Actually, we want focus always, just different inputMode
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
-    };
-
-    // Focus immediately
-    focusInput();
-
-    // Re-focus on blur (keep focus trapped for scanning)
-    const handleBlur = () => {
-      // If user was typing manually, we might want to reset mode on blur
-      setIsManualInput(false);
-
-      // Small timeout to allow UI interactions (like clicking buttons)
-      setTimeout(focusInput, 100);
-    };
-
     const input = inputRef.current;
-    if (input) {
+    if (!input) return;
+
+    if (!isManualInput) {
+      // SCANNER MODE: Aggressive focus trap
+      const keepFocus = () => {
+        if (document.activeElement !== input) {
+          input.focus();
+        }
+      };
+
+      // Initial focus
+      keepFocus();
+
+      const handleBlur = () => {
+        // Re-focus immediately to trap
+        setTimeout(keepFocus, 10);
+      };
+
       input.addEventListener('blur', handleBlur);
-    }
+      window.addEventListener('focus', keepFocus);
+      document.addEventListener('click', keepFocus);
 
-    // Focus on window focus
-    window.addEventListener('focus', focusInput);
-    document.addEventListener('click', focusInput);
-
-    return () => {
-      if (input) {
+      return () => {
         input.removeEventListener('blur', handleBlur);
-      }
-      window.removeEventListener('focus', focusInput);
-      document.removeEventListener('click', focusInput);
-    };
-  }, []);
+        window.removeEventListener('focus', keepFocus);
+        document.removeEventListener('click', keepFocus);
+      };
+    } else {
+      // MANUAL MODE: Normal behavior, but reset on blur
+      const handleBlur = () => {
+        // Delay reset to allow button clicks (like "Add") to register
+        setTimeout(() => {
+          setIsManualInput(false);
+        }, 200);
+      };
+      input.addEventListener('blur', handleBlur);
+      return () => {
+        input.removeEventListener('blur', handleBlur);
+      };
+    }
+  }, [isManualInput]);
 
   // Validate N/U format: Starts with 3 letters (e.g. BFL, CAZ)
   const isValidNuCode = (code: string): boolean => {
@@ -205,7 +210,17 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
               autoComplete="off"
               value={inputSerial}
               onChange={(e) => setInputSerial(e.target.value)}
-              onClick={() => setIsManualInput(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!isManualInput) {
+                  setIsManualInput(true);
+                  // Force re-focus to trigger keyboard
+                  if (inputRef.current) {
+                    inputRef.current.blur();
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                  }
+                }
+              }}
               onKeyDown={handleKeyDown}
               placeholder="Skanuj N/U (np. BFL...)"
               className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm"
