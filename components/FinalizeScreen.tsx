@@ -73,6 +73,33 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           const inspectionDate = new Date().toISOString();
           const nextInspectionDate = new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString();
 
+          // Upload PDF to Supabase Storage
+          let pdfUrl = null;
+          try {
+            const pdfFileName = `${currentData.clientName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('inspection-pdfs')
+              .upload(pdfFileName, blob, {
+                contentType: 'application/pdf',
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error("PDF upload error:", uploadError);
+            } else {
+              // Get public URL
+              const { data: { publicUrl } } = supabase.storage
+                .from('inspection-pdfs')
+                .getPublicUrl(pdfFileName);
+              pdfUrl = publicUrl;
+              console.log("PDF uploaded to Storage:", publicUrl);
+            }
+          } catch (pdfError) {
+            console.error("Error uploading PDF:", pdfError);
+            // Continue even if PDF upload fails
+          }
+
           // Save inspection record
           const { data: inspectionData, error: inspectionError } = await supabase
             .from('inspections')
@@ -83,7 +110,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
               next_inspection_date: nextInspectionDate,
               location: currentData.location,
               reminder_sent: false,
-              device_count: currentData.devices.length
+              device_count: currentData.devices.length,
+              pdf_url: pdfUrl
             })
             .select()
             .single();
