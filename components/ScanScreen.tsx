@@ -28,6 +28,8 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
   const [lastScannedCode, setLastScannedCode] = useState<string | null>(null);
   const [scanMessage, setScanMessage] = useState<{ text: string, type: 'error' | 'success' } | null>(null);
 
+  const [isManualInput, setIsManualInput] = useState(false);
+
   // Modal State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDescription, setEditDescription] = useState('');
@@ -38,6 +40,8 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
   // Aggressive focus management for hardware scanners
   useEffect(() => {
     const focusInput = () => {
+      // Only force focus if NOT in manual mode (to avoid fighting user)
+      // Actually, we want focus always, just different inputMode
       if (inputRef.current) {
         inputRef.current.focus();
       }
@@ -48,6 +52,9 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
     // Re-focus on blur (keep focus trapped for scanning)
     const handleBlur = () => {
+      // If user was typing manually, we might want to reset mode on blur
+      setIsManualInput(false);
+
       // Small timeout to allow UI interactions (like clicking buttons)
       setTimeout(focusInput, 100);
     };
@@ -108,6 +115,7 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
 
     onUpdateDevices([newDevice, ...devices]);
     setInputSerial('');
+    setIsManualInput(false); // Hide keyboard after adding
     setScanMessage({ text: `Dodano: ${trimmed.toUpperCase()}`, type: 'success' });
     setTimeout(() => setScanMessage(null), 2000);
   };
@@ -193,10 +201,11 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
             <input
               ref={inputRef}
               type="text"
-              inputMode="none"
+              inputMode={isManualInput ? 'text' : 'none'}
               autoComplete="off"
               value={inputSerial}
               onChange={(e) => setInputSerial(e.target.value)}
+              onClick={() => setIsManualInput(true)}
               onKeyDown={handleKeyDown}
               placeholder="Skanuj N/U (np. BFL...)"
               className="w-full pl-10 pr-12 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none shadow-sm"
