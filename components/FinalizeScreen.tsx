@@ -70,17 +70,48 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
       // 3. Save to Supabase (Cloud) - Only if Online
       if (isOnline) {
         try {
-          const { error } = await supabase.from('inspections').insert({
+          const inspectionDate = new Date().toISOString();
+          const nextInspectionDate = new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString();
+
+          // Save inspection record
+          const { data: inspectionData, error: inspectionError } = await supabase
+            .from('inspections')
+            .insert({
+              client_name: currentData.clientName,
+              client_email: currentData.clientEmail,
+              inspection_date: inspectionDate,
+              next_inspection_date: nextInspectionDate,
+              location: currentData.location,
+              reminder_sent: false,
+              device_count: currentData.devices.length
+            })
+            .select()
+            .single();
+
+          if (inspectionError) throw inspectionError;
+          console.log("Saved inspection to Supabase");
+
+          // Save all devices to devices table
+          const devicesData = currentData.devices.map(device => ({
             client_name: currentData.clientName,
-            client_email: currentData.clientEmail,
-            inspection_date: new Date().toISOString(),
-            next_inspection_date: new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString(),
+            device_name: currentData.deviceModel || 'Nieznany model',
+            serial_number: device.serialNumber,
+            last_inspection_date: inspectionDate,
+            next_inspection_date: nextInspectionDate,
             location: currentData.location,
-            reminder_sent: false,
-            device_count: currentData.devices.length // Save number of devices
-          });
-          if (error) throw error;
-          console.log("Saved to Supabase");
+            last_inspection_id: inspectionData?.id || null
+          }));
+
+          const { error: devicesError } = await supabase
+            .from('devices')
+            .insert(devicesData);
+
+          if (devicesError) {
+            console.error("Error saving devices:", devicesError);
+            // Don't throw - inspection is already saved
+          } else {
+            console.log(`Saved ${devicesData.length} devices to Supabase`);
+          }
         } catch (supaError) {
           console.error("Supabase save error:", supaError);
           // Don't block user flow if cloud save fails (e.g. offline)
@@ -113,12 +144,15 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           const base64data = reader.result as string;
           const content = base64data.split(',')[1];
 
+          // Get sample serial for email instructions
+          const sampleSerial = data.devices.length > 0 ? data.devices[0].serialNumber : undefined;
+
           // Queue emails for all recipients
           for (const recipient of recipients) {
             await addToQueue({
               to: recipient,
               subject: getEmailSubject(data.clientName),
-              html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType),
+              html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType, sampleSerial),
               attachments: [{ filename: pdfFile.fileName, content: content }]
             });
           }
@@ -146,6 +180,9 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
         const content = base64data.split(',')[1];
 
         try {
+          // Get sample serial for email instructions
+          const sampleSerial = data.devices.length > 0 ? data.devices[0].serialNumber : undefined;
+
           // Send emails sequentially
           for (const recipient of recipients) {
             await fetch('/api/send-email', {
@@ -154,7 +191,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
               body: JSON.stringify({
                 to: recipient,
                 subject: getEmailSubject(data.clientName),
-                html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType),
+                html: getEmailHtml(data.clientName, new Date().toLocaleDateString(), data.inspectionType, sampleSerial),
                 attachments: [{ filename: pdfFile.fileName, content: content }]
               }),
             });

@@ -2,7 +2,7 @@ export const getEmailSubject = (clientName: string) => {
   return `Protokół z przeglądu urządzeń fiskalnych`;
 };
 
-export const getEmailHtml = (clientName: string, date: string, inspectionType: 'annual' | 'biennial' = 'annual') => {
+export const getEmailHtml = (clientName: string, date: string, inspectionType: 'annual' | 'biennial' = 'annual', sampleSerial?: string) => {
   const typeText = inspectionType === 'biennial' ? 'dwuletniego' : 'rocznego';
   return `
     <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;">
@@ -25,6 +25,24 @@ export const getEmailHtml = (clientName: string, date: string, inspectionType: '
             <li style="margin-bottom: 5px;">Odesłanie skanu na adres: <a href="mailto:fiskalne@takma.com.pl" style="color: #2563eb; text-decoration: none; font-weight: bold;">fiskalne@takma.com.pl</a></li>
             <li style="margin-bottom: 5px;"><strong>W treści maila zwrotnego prosimy o podanie nazwy Urzędu Skarbowego, pod który podlega Nadleśnictwo.</strong></li>
           </ol>
+        </div>
+
+        <div style="background-color: #ecfdf5; border: 1px solid #10b981; border-radius: 8px; padding: 20px; margin: 30px 0; text-align: center;">
+          <h3 style="margin: 0 0 10px 0; color: #047857; font-size: 18px;">Elektroniczny Panel Klienta</h3>
+          <p style="margin: 0 0 15px 0; font-size: 14px; color: #065f46;">
+            Wszystkie protokoły, terminy kolejnych przeglądów oraz historię urządzeń możesz sprawdzić online.
+          </p>
+          
+          <a href="https://rejestratory.info/panel-klienta/dashboard" style="display: inline-block; background-color: #10b981; color: white; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: bold; font-size: 16px; margin-bottom: 15px;">
+            Przejdź do Panelu Klienta
+          </a>
+
+          ${sampleSerial ? `
+          <p style="margin: 0; font-size: 13px; color: #065f46;">
+            Aby się zalogować, wpisz numer seryjny dowolnego urządzenia z przeglądu, np.:<br>
+            <strong style="font-size: 16px; color: #047857; background-color: #d1fae5; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 5px;">${sampleSerial}</strong>
+          </p>
+          ` : ''}
         </div>
 
         <p style="font-size: 16px; line-height: 1.5; margin-top: 30px;">
