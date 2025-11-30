@@ -47,6 +47,16 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
     });
   };
 
+  const sanitizeFilename = (name: string): string => {
+    const map: Record<string, string> = {
+      'ą': 'a', 'ć': 'c', 'ę': 'e', 'ł': 'l', 'ń': 'n', 'ó': 'o', 'ś': 's', 'ź': 'z', 'ż': 'z',
+      'Ą': 'A', 'Ć': 'C', 'Ę': 'E', 'Ł': 'L', 'Ń': 'N', 'Ó': 'O', 'Ś': 'S', 'Ź': 'Z', 'Ż': 'Z'
+    };
+    return name
+      .replace(/[ąćęłńóśźżĄĆĘŁŃÓŚŹŻ]/g, match => map[match] || match)
+      .replace(/[^a-zA-Z0-9]/g, '_'); // Replace spaces and other chars with underscore
+  };
+
   const handleFinish = async () => {
     if (!data.servicemanSignature) {
       alert("Podpis serwisanta jest wymagany!");
@@ -76,7 +86,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
           // Upload PDF to Supabase Storage
           let pdfUrl = null;
           try {
-            const pdfFileName = `${currentData.clientName.replace(/\s+/g, '_')}_${new Date().getTime()}.pdf`;
+            const sanitizedClientName = sanitizeFilename(currentData.clientName);
+            const pdfFileName = `${sanitizedClientName}_${new Date().getTime()}.pdf`;
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('inspection-pdfs')
               .upload(pdfFileName, blob, {
