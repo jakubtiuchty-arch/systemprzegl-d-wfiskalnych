@@ -1,0 +1,27 @@
+export const FORESTRIES: Record<string, string> = {
+    // Przykładowe Nadleśnictwa (można rozszerzyć)
+    "węgierska górka": "5530005789",
+    "trzebnica": "9151004377",
+    "milicz": "9160002345",
+    "oleśnica": "9110005678",
+    "oborniki śląskie": "9151601234",
+    "mrągowo": "7420006987",
+    "warszawa": "5250010918",
+    "poznań": "7770005787",
+    "gdańsk": "5830002084",
+    "kraków": "6770004366",
+    "wrocław": "8980005698",
+    "szczecin": "8510208643",
+    "katowice": "9540006089",
+    "lublin": "7120103688",
+    "olsztyn": "7390503487",
+    "białystok": "5420202688",
+    "toruń": "8790017388",
+    "zielona góra": "9730026899",
+    "łódź": "7250028499",
+    "radom": "8120005699",
+    "piła": "7640002399",
+    "szczecinek": "6730005699",
+    "krosno": "6840002399",
+    // Dodaj kolejne w formacie: "nazwa małymi literami": "nip"
+};

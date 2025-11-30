@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowRight, Settings, LogOut } from 'lucide-react';
+import { ArrowRight, Settings, LogOut, Loader2 } from 'lucide-react';
 import { supabase } from '../services/supabase';
+import { FORESTRIES } from '../data/forestries';
 
 interface StartScreenProps {
   initialLocation?: string;
@@ -15,6 +16,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ initialLocation, onStart }) =
   const [deviceModel, setDeviceModel] = useState('Posnet Temo');
   const [inspectionType, setInspectionType] = useState<'annual' | 'biennial'>('annual');
   const [error, setError] = useState('');
+  const [isSearchingNip, setIsSearchingNip] = useState(false);
 
   // Update local state if prop changes (e.g. GPS found later)
   React.useEffect(() => {
@@ -34,7 +36,77 @@ const StartScreen: React.FC<StartScreenProps> = ({ initialLocation, onStart }) =
     }
     // Email is optional, but passed if present
     onStart(clientName, clientNip, clientEmail, deviceModel, location, inspectionType);
+    // Email is optional, but passed if present
+    onStart(clientName, clientNip, clientEmail, deviceModel, location, inspectionType);
   };
+
+  const handleClientNameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const name = e.target.value;
+    setClientName(name);
+    setError('');
+
+    if (name.length < 3) return;
+
+    // 1. Check Local Dictionary
+    const normalizedName = name.trim().toLowerCase();
+    // Try exact match or partial match if needed. For now, let's try direct key lookup.
+    // Since keys are lowercase, we can try to find if the input matches a key.
+    // Or better: check if any key is contained in the input (or vice versa).
+    // Let's stick to simple key lookup for now to avoid false positives.
+
+    // Check if we have a direct match in our dictionary
+    if (FORESTRIES[normalizedName]) {
+      setClientNip(FORESTRIES[normalizedName]);
+      return;
+    }
+
+    // Also try to find by "nadleśnictwo [name]" or just "[name]"
+    const nameWithoutPrefix = normalizedName.replace('nadleśnictwo', '').trim();
+    if (FORESTRIES[nameWithoutPrefix]) {
+      setClientNip(FORESTRIES[nameWithoutPrefix]);
+      return;
+    }
+
+    // 2. Check Supabase History (Debounced ideally, but simple for now)
+    // We only search if user stops typing for a bit, but here we trigger on every change > 3 chars?
+    // That might be too many requests. Let's use a simple timeout/debounce.
+    // Actually, for simplicity in this iteration, let's just do it. 
+    // But to avoid spamming, maybe only search on blur? 
+    // User requested "typing name... program fills NIP". 
+    // Let's use a small debounce.
+  };
+
+  // Debounced Supabase Lookup
+  React.useEffect(() => {
+    const lookupNip = async () => {
+      if (!clientName || clientName.length < 4) return;
+
+      // Skip if NIP is already filled (user might have entered it manually or it was found locally)
+      if (clientNip) return;
+
+      setIsSearchingNip(true);
+      try {
+        const { data, error } = await supabase
+          .from('inspections')
+          .select('client_nip')
+          .ilike('client_name', `%${clientName}%`)
+          .not('client_nip', 'is', null)
+          .limit(1)
+          .maybeSingle();
+
+        if (data && data.client_nip) {
+          setClientNip(data.client_nip);
+        }
+      } catch (err) {
+        console.error("Error looking up NIP:", err);
+      } finally {
+        setIsSearchingNip(false);
+      }
+    };
+
+    const timer = setTimeout(lookupNip, 1000); // 1s debounce
+    return () => clearTimeout(timer);
+  }, [clientName]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -97,18 +169,16 @@ const StartScreen: React.FC<StartScreenProps> = ({ initialLocation, onStart }) =
             <input
               type="text"
               value={clientName}
-              onChange={(e) => {
-                setClientName(e.target.value);
-                setError('');
-              }}
+              onChange={handleClientNameChange}
               placeholder="np. Węgierska Górka"
               className="w-full px-3 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-0.5">
-              NIP Klienta
+            <label className="block text-xs font-medium text-gray-700 mb-0.5 flex justify-between">
+              <span>NIP Klienta</span>
+              {isSearchingNip && <Loader2 size={12} className="animate-spin text-blue-500" />}
             </label>
             <input
               type="text"

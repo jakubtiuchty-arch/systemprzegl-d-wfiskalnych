@@ -87,6 +87,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
 
             if (uploadError) {
               console.error("PDF upload error:", uploadError);
+              alert(`⚠️ Błąd uploadu PDF: ${uploadError.message}`);
             } else {
               // Get public URL
               const { data: { publicUrl } } = supabase.storage
@@ -94,6 +95,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
                 .getPublicUrl(pdfFileName);
               pdfUrl = publicUrl;
               console.log("PDF uploaded to Storage:", publicUrl);
+              alert(`✅ PDF zapisany: ${pdfFileName}`);
             }
           } catch (pdfError) {
             console.error("Error uploading PDF:", pdfError);
@@ -106,6 +108,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
             .insert({
               client_name: currentData.clientName,
               client_email: currentData.clientEmail,
+              client_nip: currentData.clientNip, // Ensure column exists in DB
               inspection_date: inspectionDate,
               next_inspection_date: nextInspectionDate,
               location: currentData.location,
