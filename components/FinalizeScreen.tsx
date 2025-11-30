@@ -106,7 +106,8 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
                 .getPublicUrl(pdfFileName);
               pdfUrl = publicUrl;
               console.log("PDF uploaded to Storage:", publicUrl);
-              alert(`✅ PDF zapisany: ${pdfFileName}`);
+              console.log("PDF uploaded to Storage:", publicUrl);
+              // Alert removed as per request
             }
           } catch (pdfError) {
             console.error("Error uploading PDF:", pdfError);
@@ -287,7 +288,7 @@ const FinalizeScreen: React.FC<FinalizeScreenProps> = ({ data, onUpdateData, onB
         {email && (
           <button onClick={handleSendEmail} className={`${isOnline ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-400 hover:bg-gray-500'} text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 transition-colors`}>
             <Mail size={20} />
-            {isOnline ? 'Wyślij Email (Resend)' : 'Brak sieci - Pobierz PDF'}
+            {isOnline ? 'Wyślij Email' : 'Brak sieci - Pobierz PDF'}
           </button>
         )}
 

@@ -42,7 +42,8 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
     const input = inputRef.current;
     if (!input) return;
 
-    if (!isManualInput) {
+    // Disable trap if manual input OR modal is open
+    if (!isManualInput && !editingId) {
       // SCANNER MODE: Aggressive focus trap
       const keepFocus = () => {
         if (document.activeElement !== input) {
@@ -68,19 +69,21 @@ const ScanScreen: React.FC<ScanScreenProps> = ({ clientName, devices, onUpdateDe
         document.removeEventListener('click', keepFocus);
       };
     } else {
-      // MANUAL MODE: Normal behavior, but reset on blur
+      // MANUAL MODE or MODAL OPEN: Normal behavior
       const handleBlur = () => {
-        // Delay reset to allow button clicks (like "Add") to register
-        setTimeout(() => {
-          setIsManualInput(false);
-        }, 200);
+        // Only reset manual input if modal is NOT open
+        if (!editingId) {
+          setTimeout(() => {
+            setIsManualInput(false);
+          }, 200);
+        }
       };
       input.addEventListener('blur', handleBlur);
       return () => {
         input.removeEventListener('blur', handleBlur);
       };
     }
-  }, [isManualInput]);
+  }, [isManualInput, editingId]);
 
   // Validate N/U format: Starts with 3 letters (e.g. BFL, CAZ)
   const isValidNuCode = (code: string): boolean => {
