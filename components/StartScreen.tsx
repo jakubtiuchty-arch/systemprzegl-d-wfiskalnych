@@ -14,7 +14,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ initialLocation, onStart }) =
   const [clientEmail, setClientEmail] = useState('');
   const [location, setLocation] = useState(initialLocation || '');
   const [deviceModel, setDeviceModel] = useState('Posnet Temo');
-  const [inspectionType, setInspectionType] = useState<'annual' | 'biennial'>('annual');
+  const [inspectionType, setInspectionType] = useState<'annual' | 'biennial'>('biennial');
   const [error, setError] = useState('');
   const [isSearchingNip, setIsSearchingNip] = useState(false);
 
